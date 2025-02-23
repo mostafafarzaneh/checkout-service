@@ -4,39 +4,42 @@ import (
 	"testing"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+
+	"checkout/internal/domain"
+	"checkout/internal/infrastructure/repository"
 )
 
 func TestPurchase(t *testing.T) {
-	repository := NewEmptyMemoryDB()
-	checkout := NewCheckout(repository)
+	repo := repository.NewEmptyMemoryDB()
+	checkout := NewCheckout(repo)
 	t.Run("testPurchase", func(t *testing.T) {
-		testPurchase(t, repository, checkout)
+		testPurchase(t, repo, checkout)
 	})
 
-	repository = NewEmptyMemoryDB()
-	checkout = NewCheckout(repository)
+	repo = repository.NewEmptyMemoryDB()
+	checkout = NewCheckout(repo)
 	t.Run("testParrallelPurchase", func(t *testing.T) {
-		testPartialPurchase(t, repository, checkout)
+		testPartialPurchase(t, repo, checkout)
 	})
 
 }
 
-func testPurchase(t *testing.T, repository *MemoryDB, checkout *Checkout) {
-	products := []*Product{
-		&Product{SKU: "120P90", Name: "Google TV", Price: 49.99, Quantity: 10},
-		&Product{SKU: "A304SD", Name: "Alexa Speaker", Price: 109.50, Quantity: 10},
+func testPurchase(t *testing.T, repo *repository.MemoryDB, checkout *Checkout) {
+	products := []*domain.Product{
+		&domain.Product{SKU: "120P90", Name: "Google TV", Price: 49.99, Quantity: 10},
+		&domain.Product{SKU: "A304SD", Name: "Alexa Speaker", Price: 109.50, Quantity: 10},
 	}
 
 	for _, product := range products {
 		err := product.Validate()
 		require.NoError(t, err)
-		err = repository.UpdateProduct(*product)
+		err = repo.UpdateProduct(*product)
 		require.NoError(t, err)
 	}
 
-	items := []CartItem{
-		CartItem{SKU: products[0].SKU, Quantity: 1},
-		CartItem{SKU: products[1].SKU, Quantity: 2},
+	items := []domain.CartItem{
+		domain.CartItem{SKU: products[0].SKU, Quantity: 1},
+		domain.CartItem{SKU: products[1].SKU, Quantity: 2},
 	}
 
 	invoice, err := checkout.Purchase(items)
@@ -49,43 +52,42 @@ func testPurchase(t *testing.T, repository *MemoryDB, checkout *Checkout) {
 	assert.Equal(t, invoice.TotalCost, requiredTotalCost)
 }
 
-func testPartialPurchase(t *testing.T, repository *MemoryDB, checkout *Checkout) {
-	products := []*Product{
-		&Product{SKU: "A", Name: "Item A", Price: 20.0, Quantity: 5},
-		&Product{SKU: "B", Name: "Item B", Price: 20.0, Quantity: 1},
+func testPartialPurchase(t *testing.T, repo *repository.MemoryDB, checkout *Checkout) {
+	products := []*domain.Product{
+		&domain.Product{SKU: "A", Name: "Item A", Price: 20.0, Quantity: 5},
+		&domain.Product{SKU: "B", Name: "Item B", Price: 20.0, Quantity: 1},
 	}
 
 	for _, product := range products {
 		err := product.Validate()
 		require.NoError(t, err)
-		err = repository.UpdateProduct(*product)
+		err = repo.UpdateProduct(*product)
 		require.NoError(t, err)
 	}
 
-	items := []CartItem{
-		CartItem{SKU: "A", Quantity: 5},
-		CartItem{SKU: "B", Quantity: 2},
+	items := []domain.CartItem{
+		domain.CartItem{SKU: "A", Quantity: 5},
+		domain.CartItem{SKU: "B", Quantity: 2},
 	}
 
 	_, err := checkout.Purchase(items)
 	require.Error(t, err)
 
-	productA, _ := repository.GetProduct("A")
+	productA, _ := repo.GetProduct("A")
 	assert.Equal(t, 5, productA.Quantity)
-
 }
 
 
 func TestPromotionMacBookPro(t *testing.T) {
-	macBook := Product{SKU: "43N23P", Name: "MacBook Pro", Price: 5399.99, Quantity: 5}
-	pi := Product{SKU: "234234", Name: "Raspberry Pi B", Price: 30.00, Quantity: 10}
+	macBook := domain.Product{SKU: "43N23P", Name: "MacBook Pro", Price: 5399.99, Quantity: 5}
+	pi := domain.Product{SKU: "234234", Name: "Raspberry Pi B", Price: 30.00, Quantity: 10}
 
-	repo := NewEmptyMemoryDB()
+	repo := repository.NewEmptyMemoryDB()
 	require.NoError(t, repo.UpdateProduct(macBook))
 	require.NoError(t, repo.UpdateProduct(pi))
 	checkout := NewCheckout(repo)
 
-	cart := []CartItem{
+	cart := []domain.CartItem{
 		{SKU: "43N23P", Quantity: 1},
 	}
 
@@ -95,7 +97,7 @@ func TestPromotionMacBookPro(t *testing.T) {
 	assert.Equal(t, 5399.99, invoice.TotalCost)
 
 	// Check that both items appear in the invoice.
-	var macItem, piItem *InvoiceItem
+	var macItem, piItem *domain.InvoiceItem
 	for i, item := range invoice.Items {
 		if item.SKU == "43N23P" {
 			macItem = &invoice.Items[i]

@@ -1,40 +1,44 @@
 package application
 
+import (
+	"checkout/internal/application/port"
+	"checkout/internal/domain"
+)
 
 type Checkout struct {
-	purchaseRepo PurchaseRepository
+	purchaseRepo port.PurchaseRepository
 }
 
-func NewCheckout(repo PurchaseRepository) *Checkout {
+func NewCheckout(repo port.PurchaseRepository) *Checkout {
 	return &Checkout{repo}
 }
 
-func (c *Checkout) Purchase(cartItems []CartItem) (Invoice, error) {
+func (c *Checkout) Purchase(cartItems []domain.CartItem) (domain.Invoice, error) {
 	invoiceItems, totalCost, err := c.applyPromotions(cartItems)
 	if err != nil {
-		return Invoice{}, err
+		return domain.Invoice{}, err
 	}
 
-	var reserveItems []CartItem
+	var reserveItems []domain.CartItem
 	for _, invItem := range invoiceItems {
-		reserveItems = append(reserveItems, CartItem{
+		reserveItems = append(reserveItems, domain.CartItem{
 			SKU:      invItem.SKU,
 			Quantity: invItem.Quantity,
 		})
 	}
 
 	if err := c.purchaseRepo.BuyAllOrFail(reserveItems); err != nil {
-		return Invoice{}, err
+		return domain.Invoice{}, err
 	}
 
-	return Invoice{
+	return domain.Invoice{
 		Items:     invoiceItems,
 		TotalCost: totalCost,
 	}, nil
 }
 
-func (c *Checkout) applyPromotions(items []CartItem) ([]InvoiceItem, float64, error) {
-	var invoiceItems []InvoiceItem
+func (c *Checkout) applyPromotions(items []domain.CartItem) ([]domain.InvoiceItem, float64, error) {
+	var invoiceItems []domain.InvoiceItem
 	var totalCost float64
 
 	for _, item := range items {
@@ -45,7 +49,7 @@ func (c *Checkout) applyPromotions(items []CartItem) ([]InvoiceItem, float64, er
 
 		switch item.SKU {
 		case "43N23P":
-			macInvoice := InvoiceItem{
+			macInvoice := domain.InvoiceItem{
 				SKU:        product.SKU,
 				Name:       product.Name,
 				Quantity:   item.Quantity,
@@ -58,7 +62,7 @@ func (c *Checkout) applyPromotions(items []CartItem) ([]InvoiceItem, float64, er
 			// Free Raspberry Pi B line (price is $0).
 			piProduct, err := c.purchaseRepo.GetProduct("234234")
 			if err == nil {
-				freePi := InvoiceItem{
+				freePi := domain.InvoiceItem{
 					SKU:        piProduct.SKU,
 					Name:       piProduct.Name,
 					Quantity:   item.Quantity, // one free per MacBook Pro
@@ -70,7 +74,7 @@ func (c *Checkout) applyPromotions(items []CartItem) ([]InvoiceItem, float64, er
 		case "120P90":
 			// Google TV: Buy 3 for the price of 2.
 			chargedQty := (item.Quantity / 3) * 2 + (item.Quantity % 3)
-			invoiceItem := InvoiceItem{
+			invoiceItem := domain.InvoiceItem{
 				SKU:        product.SKU,
 				Name:       product.Name,
 				Quantity:   item.Quantity,
@@ -87,7 +91,7 @@ func (c *Checkout) applyPromotions(items []CartItem) ([]InvoiceItem, float64, er
 			} else {
 				unitPrice = product.Price
 			}
-			invoiceItem := InvoiceItem{
+			invoiceItem := domain.InvoiceItem{
 				SKU:        product.SKU,
 				Name:       product.Name,
 				Quantity:   item.Quantity,
@@ -98,7 +102,7 @@ func (c *Checkout) applyPromotions(items []CartItem) ([]InvoiceItem, float64, er
 			totalCost += invoiceItem.TotalPrice
 		default:
 			// No promotion.
-			invoiceItem := InvoiceItem{
+			invoiceItem := domain.InvoiceItem{
 				SKU:        product.SKU,
 				Name:       product.Name,
 				Quantity:   item.Quantity,

@@ -1,8 +1,10 @@
-package application
+package repository
 
 import (
 	"errors"
 	"sync"
+
+	"checkout/internal/domain"
 )
 
 type InventoryItem struct {
@@ -35,18 +37,18 @@ func NewDefaultMemoryDB() *MemoryDB {
 	return &MemoryDB{inventory: inventory}
 }
 
-func (m *MemoryDB) GetProduct(sku string) (Product, error) {
+func (m *MemoryDB) GetProduct(sku string) (domain.Product, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	inventory, ok := m.inventory[sku]
 	if !ok {
-		return Product{}, InventoryNotFoundErr
+		return domain.Product{}, InventoryNotFoundErr
 	}
 	return convertInventoryItemToProduct(inventory), nil
 }
 
-func (m *MemoryDB) UpdateProduct(product Product) error {
+func (m *MemoryDB) UpdateProduct(product domain.Product) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -58,11 +60,11 @@ func (m *MemoryDB) UpdateProduct(product Product) error {
 	return nil
 }
 
-func (m *MemoryDB) BuyAllOrFail(items []CartItem) error {
+func (m *MemoryDB) BuyAllOrFail(items []domain.CartItem) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	productList := []Product{}
+	productList := []domain.Product{}
 	for _, item := range items {
 		sku := item.SKU
 		p := convertInventoryItemToProduct(m.inventory[sku])
@@ -77,8 +79,8 @@ func (m *MemoryDB) BuyAllOrFail(items []CartItem) error {
 	return nil
 }
 
-func convertInventoryItemToProduct(item InventoryItem) Product {
-	return Product{
+func convertInventoryItemToProduct(item InventoryItem) domain.Product {
+	return domain.Product{
 		SKU: item.SKU,
 		Name: item.Name,
 		Price: item.Price,
@@ -86,7 +88,7 @@ func convertInventoryItemToProduct(item InventoryItem) Product {
 	}
 }
 
-func convertProductToInventoryItem(product Product) InventoryItem {
+func convertProductToInventoryItem(product domain.Product) InventoryItem {
 	return InventoryItem{
 		SKU: product.SKU,
 		Name: product.Name,
