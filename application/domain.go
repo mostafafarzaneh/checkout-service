@@ -8,6 +8,7 @@ var (
 	InvalidProductPriceErr = errors.New("Product Price Cannot be negative")
 	InvalidProductQuantityErr = errors.New("Product Quantity cannot be negative")
 	InvalidProductErr = errors.New("Product is invalid")
+	NotEnoughQuantityErr = errors.New("Not enough quantity")
 )
 
 type Product struct {
@@ -31,4 +32,17 @@ func (p *Product) Validate() error {
 		return InvalidProductQuantityErr
 	}
 	return nil
+}
+
+func (p *Product) BuyProduct(item CartItem) error {
+	if p.Quantity < item.Quantity {
+		return NotEnoughQuantityErr
+	}
+	p.Quantity -= item.Quantity
+	return nil
+}
+
+type CartItem struct {
+	SKU string
+	Quantity int
 }

@@ -18,7 +18,6 @@ type MemoryDB struct {
 }
 
 var (
-	NotEnoughQuantityErr = errors.New("Not enough quantity")
 	InventoryNotFoundErr = errors.New("Inventory Not found")
 )
 
@@ -36,18 +35,18 @@ func NewDefaultMemoryDB() *MemoryDB {
 	return &MemoryDB{inventory: inventory}
 }
 
-func (m *MemoryDB) GetProduct(sku string) (*Product, error) {
+func (m *MemoryDB) GetProduct(sku string) (Product, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	inventory, ok := m.inventory[sku]
 	if !ok {
-		return nil, InventoryNotFoundErr
+		return Product{}, InventoryNotFoundErr
 	}
 	return convertInventoryItemToProduct(inventory), nil
 }
 
-func (m *MemoryDB) UpdateProduct(product *Product) error {
+func (m *MemoryDB) UpdateProduct(product Product) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -59,24 +58,41 @@ func (m *MemoryDB) UpdateProduct(product *Product) error {
 	return nil
 }
 
-func (m *MemoryDB) BuyProduct(sku string, quantity int) error {
+func (m *MemoryDB) BuyProducts(items []CartItem) (float64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if m.inventory[sku].Quantity < quantity {
-		return NotEnoughQuantityErr
+	var totalCost float64 = 0
+	productList := []Product{}
+	for _, item := range items {
+		sku := item.SKU
+		p := convertInventoryItemToProduct(m.inventory[sku])
+		if err := p.BuyProduct(item); err != nil {
+			return -1, err
+		}
+		totalCost += p.Price * float64(item.Quantity)
+		productList = append(productList, p)
 	}
-	newItem := m.inventory[sku]
-	newItem.Quantity -= quantity
-	m.inventory[sku] = newItem
-	return nil
+	for _, product := range productList {
+		m.inventory[product.SKU] = convertProductToInventoryItem(product)
+	}
+	return totalCost, nil
 }
 
-func convertInventoryItemToProduct(item InventoryItem) *Product {
-	return &Product{
+func convertInventoryItemToProduct(item InventoryItem) Product {
+	return Product{
 		SKU: item.SKU,
 		Name: item.Name,
 		Price: item.Price,
 		Quantity: item.Quantity,
+	}
+}
+
+func convertProductToInventoryItem(product Product) InventoryItem {
+	return InventoryItem{
+		SKU: product.SKU,
+		Name: product.Name,
+		Price: product.Price,
+		Quantity: product.Quantity,
 	}
 }

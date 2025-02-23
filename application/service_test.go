@@ -12,6 +12,13 @@ func TestPurchase(t *testing.T) {
 	t.Run("testPurchase", func(t *testing.T) {
 		testPurchase(t, repository, checkout)
 	})
+
+	repository = NewEmptyMemoryDB()
+	checkout = NewCheckout(repository)
+	t.Run("testParrallelPurchase", func(t *testing.T) {
+		testPartialPurchase(t, repository, checkout)
+	})
+
 }
 
 func testPurchase(t *testing.T, repository *MemoryDB, checkout *Checkout) {
@@ -24,7 +31,7 @@ func testPurchase(t *testing.T, repository *MemoryDB, checkout *Checkout) {
 	for _, product := range products {
 		err := product.Validate()
 		require.NoError(t, err)
-		err = repository.UpdateProduct(product)
+		err = repository.UpdateProduct(*product)
 		require.NoError(t, err)
 	}
 
@@ -41,4 +48,30 @@ func testPurchase(t *testing.T, repository *MemoryDB, checkout *Checkout) {
 	requiredTotalCost += products[1].Price * float64(items[1].Quantity)
 
 	assert.Equal(t, totalCost, requiredTotalCost)
+}
+
+func testPartialPurchase(t *testing.T, repository *MemoryDB, checkout *Checkout) {
+	products := []*Product{
+		&Product{SKU: "A", Name: "Item A", Price: 20.0, Quantity: 5},
+		&Product{SKU: "B", Name: "Item B", Price: 20.0, Quantity: 1},
+	}
+
+	for _, product := range products {
+		err := product.Validate()
+		require.NoError(t, err)
+		err = repository.UpdateProduct(*product)
+		require.NoError(t, err)
+	}
+
+	items := []CartItem{
+		CartItem{SKU: "A", Quantity: 5},
+		CartItem{SKU: "B", Quantity: 2},
+	}
+
+	_, err := checkout.Purchase(items)
+	require.Error(t, err)
+
+	productA, _ := repository.GetProduct("A")
+	assert.Equal(t, 5, productA.Quantity)
+
 }
