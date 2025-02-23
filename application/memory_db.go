@@ -58,7 +58,7 @@ func (m *MemoryDB) UpdateProduct(product Product) error {
 	return nil
 }
 
-func (m *MemoryDB) BuyProducts(items []CartItem) (float64, error) {
+func (m *MemoryDB) BuyAllOrFail(items []CartItem) (float64, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

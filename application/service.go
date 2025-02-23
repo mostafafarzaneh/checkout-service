@@ -2,13 +2,13 @@ package application
 
 
 type Checkout struct {
-	Repository *MemoryDB
+	purchaseRepo PurchaseRepository
 }
 
-func NewCheckout(Repository *MemoryDB) *Checkout {
-	return &Checkout{Repository}
+func NewCheckout(repo PurchaseRepository) *Checkout {
+	return &Checkout{repo}
 }
 
 func (c *Checkout) Purchase(cartItems []CartItem) (float64, error) {
-	return c.Repository.BuyProducts(cartItems)
+	return c.purchaseRepo.BuyAllOrFail(cartItems)
 }
