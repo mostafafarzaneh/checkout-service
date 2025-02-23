@@ -1,7 +1,7 @@
 package application
 
 type PurchaseRepository interface {
-	BuyAllOrFail(cart []CartItem) (float64, error)
+	BuyAllOrFail(cart []CartItem) error
 
 	GetProduct(sku string) (Product, error)
 	UpdateProduct(Product) error

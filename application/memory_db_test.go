@@ -38,9 +38,8 @@ func testBuyProduct(t *testing.T, repository PurchaseRepository) {
 	err = repository.UpdateProduct(*product)
 	require.NoError(t, err)
 
-	totalCost, err := repository.BuyAllOrFail([]CartItem{CartItem{product.SKU, 5}})
+	err = repository.BuyAllOrFail([]CartItem{CartItem{product.SKU, 5}})
 	require.NoError(t, err)
-	require.Equal(t, 49.99*float64(5), totalCost)
 
 	requiredProduct := &Product{SKU: "120P90", Name: "Google TV", Price: 49.99, Quantity: 5}
 	gotProduct, err := repository.GetProduct(product.SKU)
@@ -62,9 +61,8 @@ func TestConcurrentPurchase(t *testing.T) {
         wg.Add(1)
         go func() {
             defer wg.Done()
-            totalCost, err := repo.BuyAllOrFail([]CartItem{CartItem{"120P90", 5}})
+            err := repo.BuyAllOrFail([]CartItem{CartItem{"120P90", 5}})
             require.NoError(t, err)
-	    require.Equal(t, 49.99*float64(5), totalCost)
         }()
     }
     wg.Wait()

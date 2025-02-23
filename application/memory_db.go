@@ -58,25 +58,23 @@ func (m *MemoryDB) UpdateProduct(product Product) error {
 	return nil
 }
 
-func (m *MemoryDB) BuyAllOrFail(items []CartItem) (float64, error) {
+func (m *MemoryDB) BuyAllOrFail(items []CartItem) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	var totalCost float64 = 0
 	productList := []Product{}
 	for _, item := range items {
 		sku := item.SKU
 		p := convertInventoryItemToProduct(m.inventory[sku])
 		if err := p.BuyProduct(item); err != nil {
-			return -1, err
+			return err
 		}
-		totalCost += p.Price * float64(item.Quantity)
 		productList = append(productList, p)
 	}
 	for _, product := range productList {
 		m.inventory[product.SKU] = convertProductToInventoryItem(product)
 	}
-	return totalCost, nil
+	return nil
 }
 
 func convertInventoryItemToProduct(item InventoryItem) Product {
