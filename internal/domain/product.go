@@ -5,16 +5,16 @@ import (
 )
 
 var (
-	InvalidProductPriceErr = errors.New("Product Price Cannot be negative")
+	InvalidProductPriceErr    = errors.New("Product Price Cannot be negative")
 	InvalidProductQuantityErr = errors.New("Product Quantity cannot be negative")
-	InvalidProductErr = errors.New("Product is invalid")
-	NotEnoughQuantityErr = errors.New("Not enough quantity")
+	InvalidProductErr         = errors.New("Product is invalid")
+	NotEnoughQuantityErr      = errors.New("Not enough quantity")
 )
 
 type Product struct {
-	SKU string
-	Name string
-	Price float64
+	SKU      string
+	Name     string
+	Price    float64
 	Quantity int
 }
 

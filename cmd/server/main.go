@@ -1,8 +1,8 @@
 package main
 
 import (
-	"net/http"
 	"log"
+	"net/http"
 
 	"checkout/internal/application"
 	"checkout/internal/infrastructure/repository"

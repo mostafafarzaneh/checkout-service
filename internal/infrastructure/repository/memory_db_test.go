@@ -1,13 +1,13 @@
 package repository
 
 import (
-	"testing"
-	"sync"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"sync"
+	"testing"
 
-	"checkout/internal/domain"
 	"checkout/internal/application/port"
+	"checkout/internal/domain"
 )
 
 func TestMemoryDB(t *testing.T) {
@@ -51,26 +51,26 @@ func testBuyProduct(t *testing.T, repository port.PurchaseRepository) {
 }
 
 func TestConcurrentPurchase(t *testing.T) {
-    repo := NewEmptyMemoryDB()
-    _ = repo.UpdateProduct(domain.Product{
-        SKU: "120P90",
-        Name: "Google TV",
-        Price: 49.99,
-        Quantity: 100,
-    })
+	repo := NewEmptyMemoryDB()
+	_ = repo.UpdateProduct(domain.Product{
+		SKU:      "120P90",
+		Name:     "Google TV",
+		Price:    49.99,
+		Quantity: 100,
+	})
 
-    var wg sync.WaitGroup
-    for i := 0; i < 10; i++ {
-        wg.Add(1)
-        go func() {
-            defer wg.Done()
-            err := repo.BuyAllOrFail([]domain.CartItem{domain.CartItem{"120P90", 5}})
-            require.NoError(t, err)
-        }()
-    }
-    wg.Wait()
+	var wg sync.WaitGroup
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			err := repo.BuyAllOrFail([]domain.CartItem{domain.CartItem{"120P90", 5}})
+			require.NoError(t, err)
+		}()
+	}
+	wg.Wait()
 
-    product, err := repo.GetProduct("120P90")
-    require.NoError(t, err)
-    assert.Equal(t, 50, product.Quantity)
+	product, err := repo.GetProduct("120P90")
+	require.NoError(t, err)
+	assert.Equal(t, 50, product.Quantity)
 }

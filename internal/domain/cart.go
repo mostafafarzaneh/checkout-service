@@ -1,6 +1,6 @@
 package domain
 
 type CartItem struct {
-	SKU string
+	SKU      string
 	Quantity int
 }

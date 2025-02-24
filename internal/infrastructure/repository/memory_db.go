@@ -8,15 +8,15 @@ import (
 )
 
 type InventoryItem struct {
-	SKU string
-	Name string
-	Price float64
+	SKU      string
+	Name     string
+	Price    float64
 	Quantity int
 }
 
 type MemoryDB struct {
 	inventory map[string]InventoryItem
-	mu sync.Mutex
+	mu        sync.Mutex
 }
 
 var (
@@ -81,18 +81,18 @@ func (m *MemoryDB) BuyAllOrFail(items []domain.CartItem) error {
 
 func convertInventoryItemToProduct(item InventoryItem) domain.Product {
 	return domain.Product{
-		SKU: item.SKU,
-		Name: item.Name,
-		Price: item.Price,
+		SKU:      item.SKU,
+		Name:     item.Name,
+		Price:    item.Price,
 		Quantity: item.Quantity,
 	}
 }
 
 func convertProductToInventoryItem(product domain.Product) InventoryItem {
 	return InventoryItem{
-		SKU: product.SKU,
-		Name: product.Name,
-		Price: product.Price,
+		SKU:      product.SKU,
+		Name:     product.Name,
+		Price:    product.Price,
 		Quantity: product.Quantity,
 	}
 }

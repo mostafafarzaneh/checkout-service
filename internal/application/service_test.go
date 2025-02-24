@@ -1,9 +1,9 @@
 package application
 
 import (
-	"testing"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"testing"
 
 	"checkout/internal/domain"
 	"checkout/internal/infrastructure/repository"
@@ -76,7 +76,6 @@ func testPartialPurchase(t *testing.T, repo *repository.MemoryDB, checkout *Chec
 	productA, _ := repo.GetProduct("A")
 	assert.Equal(t, 5, productA.Quantity)
 }
-
 
 func TestPromotionMacBookPro(t *testing.T) {
 	macBook := domain.Product{SKU: "43N23P", Name: "MacBook Pro", Price: 5399.99, Quantity: 5}

@@ -73,7 +73,7 @@ func (c *Checkout) applyPromotions(items []domain.CartItem) ([]domain.InvoiceIte
 			}
 		case "120P90":
 			// Google TV: Buy 3 for the price of 2.
-			chargedQty := (item.Quantity / 3) * 2 + (item.Quantity % 3)
+			chargedQty := (item.Quantity/3)*2 + (item.Quantity % 3)
 			invoiceItem := domain.InvoiceItem{
 				SKU:        product.SKU,
 				Name:       product.Name,

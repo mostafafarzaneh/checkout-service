@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"checkout/internal/domain"
 	"checkout/internal/application"
+	"checkout/internal/domain"
 )
 
 type PurchaseRequest struct {
@@ -15,7 +15,7 @@ type PurchaseRequest struct {
 
 type PurchaseResponse struct {
 	Invoice domain.Invoice `json:"invoice"`
-	Error string  `json:"error, omitempty"`
+	Error   string         `json:"error, omitempty"`
 }
 
 type PurchaseHandler struct {
@@ -40,14 +40,14 @@ func (h *PurchaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	invoice, err := h.Checkout.Purchase(req.Items)
 	if err != nil {
-		 log.Printf("Purchase error: %v", err)
-		 resp := PurchaseResponse{
-			 Error: err.Error(),
-			 Invoice: domain.Invoice{},
-		 }
-		 w.WriteHeader(http.StatusConflict)
-		 _ = json.NewEncoder(w).Encode(resp)
-		 return
+		log.Printf("Purchase error: %v", err)
+		resp := PurchaseResponse{
+			Error:   err.Error(),
+			Invoice: domain.Invoice{},
+		}
+		w.WriteHeader(http.StatusConflict)
+		_ = json.NewEncoder(w).Encode(resp)
+		return
 	}
 
 	resp := PurchaseResponse{
