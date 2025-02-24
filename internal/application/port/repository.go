@@ -6,6 +6,7 @@ import (
 
 type PurchaseRepository interface {
 	BuyAllOrFail(cart []domain.CartItem) error
+	RestoreProducts(items []domain.CartItem) error
 
 	GetProduct(sku string) (domain.Product, error)
 	UpdateProduct(domain.Product) error

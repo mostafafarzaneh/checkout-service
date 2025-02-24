@@ -79,6 +79,21 @@ func (m *MemoryDB) BuyAllOrFail(items []domain.CartItem) error {
 	return nil
 }
 
+func (m *MemoryDB) RestoreProducts(items []domain.CartItem) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for _, item := range items {
+		invItem, ok := m.inventory[item.SKU]
+		if !ok {
+			continue
+		}
+		invItem.Quantity += item.Quantity
+		m.inventory[item.SKU] = invItem
+	}
+	return nil
+}
+
 func convertInventoryItemToProduct(item InventoryItem) domain.Product {
 	return domain.Product{
 		SKU:      item.SKU,

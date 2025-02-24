@@ -41,10 +41,12 @@ func (c *Checkout) Purchase(cartItems []domain.CartItem) (domain.Order, error) {
 	}
 
 	if err := c.paymentProcessor.ProcessPayment(orderItems); err != nil {
+		c.purchaseRepo.RestoreProducts(finalCartItems)
 		return domain.Order{}, PaymentFailedErr
 	}
 
 	if err := c.orderProcessor.ProcessOrder(orderItems); err != nil {
+		c.purchaseRepo.RestoreProducts(finalCartItems)
 		return domain.Order{}, OrderProcessingFailedErr
 	}
 
