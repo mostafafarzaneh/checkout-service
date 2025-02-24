@@ -1,16 +1,25 @@
 package application
 
 import (
+	"errors"
+
 	"checkout/internal/application/port"
 	"checkout/internal/domain"
 )
 
+var (
+	PaymentFailedErr         = errors.New("Payment Failed")
+	OrderProcessingFailedErr = errors.New("OrderProcessing Failed")
+)
+
 type Checkout struct {
-	purchaseRepo port.PurchaseRepository
+	purchaseRepo     port.PurchaseRepository
+	paymentProcessor port.PaymentProcessor
+	orderProcessor   port.OrderProcessor
 }
 
-func NewCheckout(repo port.PurchaseRepository) *Checkout {
-	return &Checkout{repo}
+func NewCheckout(repo port.PurchaseRepository, paymentProcessor port.PaymentProcessor, orderProcessor port.OrderProcessor) *Checkout {
+	return &Checkout{repo, paymentProcessor, orderProcessor}
 }
 
 func (c *Checkout) Purchase(cartItems []domain.CartItem) (domain.Order, error) {
@@ -19,16 +28,24 @@ func (c *Checkout) Purchase(cartItems []domain.CartItem) (domain.Order, error) {
 		return domain.Order{}, err
 	}
 
-	var reserveItems []domain.CartItem
+	var finalCartItems []domain.CartItem
 	for _, invItem := range orderItems {
-		reserveItems = append(reserveItems, domain.CartItem{
+		finalCartItems = append(finalCartItems, domain.CartItem{
 			SKU:      invItem.SKU,
 			Quantity: invItem.Quantity,
 		})
 	}
 
-	if err := c.purchaseRepo.BuyAllOrFail(reserveItems); err != nil {
+	if err := c.purchaseRepo.BuyAllOrFail(finalCartItems); err != nil {
 		return domain.Order{}, err
+	}
+
+	if err := c.paymentProcessor.ProcessPayment(orderItems); err != nil {
+		return domain.Order{}, PaymentFailedErr
+	}
+
+	if err := c.orderProcessor.ProcessOrder(orderItems); err != nil {
+		return domain.Order{}, OrderProcessingFailedErr
 	}
 
 	return domain.Order{
