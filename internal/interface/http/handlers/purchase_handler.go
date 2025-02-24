@@ -14,8 +14,8 @@ type PurchaseRequest struct {
 }
 
 type PurchaseResponse struct {
-	Invoice domain.Invoice `json:"invoice"`
-	Error   string         `json:"error, omitempty"`
+	Order domain.Order `json:"order"`
+	Error string       `json:"error, omitempty"`
 }
 
 type PurchaseHandler struct {
@@ -38,12 +38,12 @@ func (h *PurchaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	invoice, err := h.Checkout.Purchase(req.Items)
+	order, err := h.Checkout.Purchase(req.Items)
 	if err != nil {
 		log.Printf("Purchase error: %v", err)
 		resp := PurchaseResponse{
-			Error:   err.Error(),
-			Invoice: domain.Invoice{},
+			Error: err.Error(),
+			Order: domain.Order{},
 		}
 		w.WriteHeader(http.StatusConflict)
 		_ = json.NewEncoder(w).Encode(resp)
@@ -51,7 +51,7 @@ func (h *PurchaseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := PurchaseResponse{
-		Invoice: invoice,
+		Order: order,
 	}
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(resp)

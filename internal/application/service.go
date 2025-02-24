@@ -13,14 +13,14 @@ func NewCheckout(repo port.PurchaseRepository) *Checkout {
 	return &Checkout{repo}
 }
 
-func (c *Checkout) Purchase(cartItems []domain.CartItem) (domain.Invoice, error) {
-	invoiceItems, totalCost, err := c.applyPromotions(cartItems)
+func (c *Checkout) Purchase(cartItems []domain.CartItem) (domain.Order, error) {
+	orderItems, totalCost, err := c.applyPromotions(cartItems)
 	if err != nil {
-		return domain.Invoice{}, err
+		return domain.Order{}, err
 	}
 
 	var reserveItems []domain.CartItem
-	for _, invItem := range invoiceItems {
+	for _, invItem := range orderItems {
 		reserveItems = append(reserveItems, domain.CartItem{
 			SKU:      invItem.SKU,
 			Quantity: invItem.Quantity,
@@ -28,17 +28,17 @@ func (c *Checkout) Purchase(cartItems []domain.CartItem) (domain.Invoice, error)
 	}
 
 	if err := c.purchaseRepo.BuyAllOrFail(reserveItems); err != nil {
-		return domain.Invoice{}, err
+		return domain.Order{}, err
 	}
 
-	return domain.Invoice{
-		Items:     invoiceItems,
+	return domain.Order{
+		Items:     orderItems,
 		TotalCost: totalCost,
 	}, nil
 }
 
-func (c *Checkout) applyPromotions(items []domain.CartItem) ([]domain.InvoiceItem, float64, error) {
-	var invoiceItems []domain.InvoiceItem
+func (c *Checkout) applyPromotions(items []domain.CartItem) ([]domain.OrderItem, float64, error) {
+	var orderItems []domain.OrderItem
 	var totalCost float64
 
 	for _, item := range items {
@@ -49,40 +49,40 @@ func (c *Checkout) applyPromotions(items []domain.CartItem) ([]domain.InvoiceIte
 
 		switch item.SKU {
 		case "43N23P":
-			macInvoice := domain.InvoiceItem{
+			macOrder := domain.OrderItem{
 				SKU:        product.SKU,
 				Name:       product.Name,
 				Quantity:   item.Quantity,
 				UnitPrice:  product.Price,
 				TotalPrice: product.Price * float64(item.Quantity),
 			}
-			invoiceItems = append(invoiceItems, macInvoice)
-			totalCost += macInvoice.TotalPrice
+			orderItems = append(orderItems, macOrder)
+			totalCost += macOrder.TotalPrice
 
 			// Free Raspberry Pi B line (price is $0).
 			piProduct, err := c.purchaseRepo.GetProduct("234234")
 			if err == nil {
-				freePi := domain.InvoiceItem{
+				freePi := domain.OrderItem{
 					SKU:        piProduct.SKU,
 					Name:       piProduct.Name,
 					Quantity:   item.Quantity, // one free per MacBook Pro
 					UnitPrice:  0.0,
 					TotalPrice: 0.0,
 				}
-				invoiceItems = append(invoiceItems, freePi)
+				orderItems = append(orderItems, freePi)
 			}
 		case "120P90":
 			// Google TV: Buy 3 for the price of 2.
 			chargedQty := (item.Quantity/3)*2 + (item.Quantity % 3)
-			invoiceItem := domain.InvoiceItem{
+			OrderItem := domain.OrderItem{
 				SKU:        product.SKU,
 				Name:       product.Name,
 				Quantity:   item.Quantity,
 				UnitPrice:  product.Price,
 				TotalPrice: product.Price * float64(chargedQty),
 			}
-			invoiceItems = append(invoiceItems, invoiceItem)
-			totalCost += invoiceItem.TotalPrice
+			orderItems = append(orderItems, OrderItem)
+			totalCost += OrderItem.TotalPrice
 		case "A304SD":
 			// Alexa Speaker: 10% discount if buying more than 3.
 			var unitPrice float64
@@ -91,28 +91,28 @@ func (c *Checkout) applyPromotions(items []domain.CartItem) ([]domain.InvoiceIte
 			} else {
 				unitPrice = product.Price
 			}
-			invoiceItem := domain.InvoiceItem{
+			OrderItem := domain.OrderItem{
 				SKU:        product.SKU,
 				Name:       product.Name,
 				Quantity:   item.Quantity,
 				UnitPrice:  unitPrice,
 				TotalPrice: unitPrice * float64(item.Quantity),
 			}
-			invoiceItems = append(invoiceItems, invoiceItem)
-			totalCost += invoiceItem.TotalPrice
+			orderItems = append(orderItems, OrderItem)
+			totalCost += OrderItem.TotalPrice
 		default:
 			// No promotion.
-			invoiceItem := domain.InvoiceItem{
+			OrderItem := domain.OrderItem{
 				SKU:        product.SKU,
 				Name:       product.Name,
 				Quantity:   item.Quantity,
 				UnitPrice:  product.Price,
 				TotalPrice: product.Price * float64(item.Quantity),
 			}
-			invoiceItems = append(invoiceItems, invoiceItem)
-			totalCost += invoiceItem.TotalPrice
+			orderItems = append(orderItems, OrderItem)
+			totalCost += OrderItem.TotalPrice
 		}
 	}
 
-	return invoiceItems, totalCost, nil
+	return orderItems, totalCost, nil
 }

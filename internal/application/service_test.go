@@ -42,14 +42,14 @@ func testPurchase(t *testing.T, repo *repository.MemoryDB, checkout *Checkout) {
 		domain.CartItem{SKU: products[1].SKU, Quantity: 2},
 	}
 
-	invoice, err := checkout.Purchase(items)
+	order, err := checkout.Purchase(items)
 	require.NoError(t, err)
 
 	var requiredTotalCost float64 = 0
 	requiredTotalCost += products[0].Price * float64(items[0].Quantity)
 	requiredTotalCost += products[1].Price * float64(items[1].Quantity)
 
-	assert.Equal(t, invoice.TotalCost, requiredTotalCost)
+	assert.Equal(t, order.TotalCost, requiredTotalCost)
 }
 
 func testPartialPurchase(t *testing.T, repo *repository.MemoryDB, checkout *Checkout) {
@@ -90,23 +90,22 @@ func TestPromotionMacBookPro(t *testing.T) {
 		{SKU: "43N23P", Quantity: 1},
 	}
 
-	invoice, err := checkout.Purchase(cart)
+	order, err := checkout.Purchase(cart)
 	require.NoError(t, err)
 
-	assert.Equal(t, 5399.99, invoice.TotalCost)
+	assert.Equal(t, 5399.99, order.TotalCost)
 
-	// Check that both items appear in the invoice.
-	var macItem, piItem *domain.InvoiceItem
-	for i, item := range invoice.Items {
+	var macItem, piItem *domain.OrderItem
+	for i, item := range order.Items {
 		if item.SKU == "43N23P" {
-			macItem = &invoice.Items[i]
+			macItem = &order.Items[i]
 		} else if item.SKU == "234234" {
-			piItem = &invoice.Items[i]
+			piItem = &order.Items[i]
 		}
 	}
 
-	require.NotNil(t, macItem, "Invoice should include MacBook Pro")
-	require.NotNil(t, piItem, "Invoice should include free Raspberry Pi B")
+	require.NotNil(t, macItem, "Order should include MacBook Pro")
+	require.NotNil(t, piItem, "Order should include free Raspberry Pi B")
 
 	assert.Equal(t, 1, macItem.Quantity)
 	assert.Equal(t, 5399.99, macItem.TotalPrice)

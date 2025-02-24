@@ -1,6 +1,6 @@
 package domain
 
-type InvoiceItem struct {
+type OrderItem struct {
 	SKU        string
 	Name       string
 	Quantity   int
@@ -8,7 +8,7 @@ type InvoiceItem struct {
 	TotalPrice float64
 }
 
-type Invoice struct {
-	Items     []InvoiceItem
+type Order struct {
+	Items     []OrderItem
 	TotalCost float64
 }
