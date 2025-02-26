@@ -5,14 +5,15 @@ import (
 	"net/http"
 
 	"checkout/internal/application"
-	"checkout/internal/infrastructure"
+	"checkout/internal/infrastructure/payment"
+	"checkout/internal/infrastructure/orderprocessing"
 	"checkout/internal/infrastructure/repository"
 	"checkout/internal/interface/http/handlers"
 )
 
 func main() {
-	paymentProcessor := &infrastructure.DummyPaymentProcessor{}
-	orderProcessor := &infrastructure.DummyOrderProcessor{}
+	paymentProcessor := &payment.DummyPaymentProcessor{}
+	orderProcessor := &orderprocessing.DummyOrderProcessor{}
 
 	repo := repository.NewDefaultMemoryDB()
 	checkout := application.NewCheckout(repo, paymentProcessor, orderProcessor)

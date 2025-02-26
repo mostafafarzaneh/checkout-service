@@ -6,13 +6,14 @@ import (
 	"testing"
 
 	"checkout/internal/domain"
-	"checkout/internal/infrastructure"
+	"checkout/internal/infrastructure/payment"
+	"checkout/internal/infrastructure/orderprocessing"
 	"checkout/internal/infrastructure/repository"
 )
 
 func TestPurchase(t *testing.T) {
-	paymentProcessor := &infrastructure.DummyPaymentProcessor{}
-	orderProcessor := &infrastructure.DummyOrderProcessor{}
+	paymentProcessor := &payment.DummyPaymentProcessor{}
+	orderProcessor := &orderprocessing.DummyOrderProcessor{}
 
 	repo := repository.NewEmptyMemoryDB()
 	checkout := NewCheckout(repo, paymentProcessor, orderProcessor)
@@ -85,8 +86,8 @@ func TestPromotionMacBookPro(t *testing.T) {
 	macBook := domain.Product{SKU: "43N23P", Name: "MacBook Pro", Price: 5399.99, Quantity: 5}
 	pi := domain.Product{SKU: "234234", Name: "Raspberry Pi B", Price: 30.00, Quantity: 10}
 
-	paymentProcessor := &infrastructure.DummyPaymentProcessor{}
-	orderProcessor := &infrastructure.DummyOrderProcessor{}
+	paymentProcessor := &payment.DummyPaymentProcessor{}
+	orderProcessor := &orderprocessing.DummyOrderProcessor{}
 
 	repo := repository.NewEmptyMemoryDB()
 	require.NoError(t, repo.UpdateProduct(macBook))
